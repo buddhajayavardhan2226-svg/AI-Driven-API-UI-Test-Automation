@@ -1,0 +1,33 @@
+
+[Clean DB Status]: 204
+[Init DB Status]: 204
+[Register Status]: 200
+[32m[1mTHESE ARE THE ALL PATHS WHICH WE GET OUT FROM API REQUEST
+/billpay
+/customers/{customerId}/buyPosition
+/cleanDB
+/createAccount
+/deposit
+/accounts/{accountId}
+/customers/{customerId}/accounts
+/customers/{customerId}
+/positions/{positionId}
+/positions/{positionId}/{startDate}/{endDate}
+/customers/{customerId}/positions
+/transactions/{transactionId}
+/accounts/{accountId}/transactions
+/accounts/{accountId}/transactions/amount/{amount}
+/accounts/{accountId}/transactions/month/{month}/type/{type}
+/accounts/{accountId}/transactions/fromDate/{fromDate}/toDate/{toDate}
+/accounts/{accountId}/transactions/onDate/{onDate}
+/initializeDB
+/login/{username}/{password}
+/requestLoan
+/customers/{customerId}/sellPosition
+/setParameter/{name}/{value}
+/shutdownJmsListener
+/startupJmsListener
+/transfer
+/customers/update/{customerId}
+/withdraw
+[92m[1mTOTAL NUMBER OF ALL POSSIBLE PATHS EXTRACTED FROM API REQUEST OF PARABANK:  27

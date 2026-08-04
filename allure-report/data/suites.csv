@@ -1,0 +1,7 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","3696","test_login_INvalidDetails","tests","2026-08-04","passed","2026-08-04","","test_login","",""
+"","7925","test_transation_page","tests","2026-08-04","passed","2026-08-04","","test_transfer_page","",""
+"","2418","test_parabank_api","tests","2026-08-04","passed","2026-08-04","","test_API","",""
+"","4125","test_login_validDetails","tests","2026-08-04","passed","2026-08-04","","test_login","",""
+"","1508","test_regestrationpage","tests","2026-08-04","passed","2026-08-04","","test_regestrationPage","",""
+"","17810","test_E2E","tests","2026-08-04","passed","2026-08-04","","test_END_TO_END","",""

@@ -1,0 +1,17 @@
+pytest
+playwright
+pytest-playwright
+pytest-xdist
+pytest-html
+allure-pytest
+pytest-rerunfailures
+openpyxl
+Faker
+python-slugify
+pyyaml
+pytest-order
+colorama
+rich
+
+# manually install  browsers
+# playwright install

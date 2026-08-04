@@ -1,0 +1,11 @@
+[OK] Starting browser: ['chromium']
+[OK] Headless mode: False (headed=True)
+[INFO] Navigating to: https://parabank.parasoft.com/parabank
+[TRACE] Tracing enabled - capturing screenshots and actions
+[92m[1mREGESTRATION IN PROCESS..............
+[RESULT] Test 'test_E2E' result: [FAIL]
+[SAVE] Trace saved: reports/traces/test_E2E_trace.zip
+[SAVE] Screenshot saved: reports/screenshots/test_E2E.png
+[ATTACH] Screenshot attached to Allure report
+[ATTACH] Video attached to Allure report
+[CLEANUP] Closing browser context and stopping Playwright...

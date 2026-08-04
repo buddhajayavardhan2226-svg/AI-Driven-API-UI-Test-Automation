@@ -1,0 +1,13 @@
+{
+  "firstName": "jaya",
+  "lastName": "vara",
+  "address": "123 Elm Street",
+  "city": "Springfield",
+  "state": "IL",
+  "zipCode": "62701",
+  "phoneNumber": "555-123-4567",
+  "ssn": "000-11-2222",
+  "username": "jayavara",
+  "password": "jaya123!",
+  "confirm": "jaya123!"
+}
