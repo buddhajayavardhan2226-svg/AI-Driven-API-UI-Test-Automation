@@ -1,57 +1,50 @@
-from playwright.sync_api import Page , Playwright ,expect
-
+from playwright.sync_api import Page, Locator
 
 class Regestrationpage:
-
-    def __init__(self , page : Page):
+    def __init__(self, page: Page):
         self.page = page
+        self.first_name_input = page.locator("input[id='customer.firstName']")
+        self.last_name_input = page.locator("input[id='customer.lastName']")
+        self.address_input = page.locator("input[id='customer.address.street']")
+        self.city_input = page.locator("input[id='customer.address.city']")
+        self.state_input = page.locator("input[id='customer.address.state']")
+        self.zip_code_input = page.locator("input[id='customer.address.zipCode']")
+        self.phone_input = page.locator("input[id='customer.phoneNumber']")
+        self.ssn_input = page.locator("input[id='customer.ssn']")
+        self.username_input = page.locator("input[id='customer.username']")
+        self.password_input = page.locator("input[id='customer.password']")
+        self.confirm_password_input = page.locator("input[id='repeatedPassword']")
+        self.register_button = page.locator("input[value='Register']")
+        self.msg_after_creation = page.get_by_text("Your account was created successfully.")
 
-        self.firstname=page.locator("[id=\"customer.firstName\"]")
-        self.lastname=page.locator("[id=\"customer.lastName\"]")
-        self.address=page.locator("[id=\"customer.address.street\"]")
-        self.city=page.locator("[id=\"customer.address.city\"]")
-        self.state=page.locator("[id=\"customer.address.state\"]")
-        self.zipcode=page.locator("[id=\"customer.address.zipCode\"]")
-        self.phone=page.locator("[id=\"customer.phoneNumber\"]")
-        self.ssn=page.locator("[id=\"customer.ssn\"]")
-        self.username=page.locator("[id=\"customer.username\"]")
-        self.password=page.locator("[id=\"customer.password\"]")
-        self.conformpassword=page.locator("[id=\"repeatedPassword\"]")
-        self.regesterbutton=page.get_by_role("button", name="Register")
-        self.msg_after_creation=page.get_by_text("Your account was created")
-        self.logout = page.get_by_role("link", name="Log Out")
+    def set_first_last_name(self, first_name: str, last_name: str):
+        self.first_name_input.fill(first_name)
+        self.last_name_input.fill(last_name)
 
-    def set_first_last_name(self, first_name : str, last_name : str):
-        self.firstname.fill(first_name)
-        self.lastname.fill(last_name)
-    def set_address_city_state_zipcode(self,address : str , city : str, state : str, zipcode : str):
-        self.address.fill(address)
-        self.city.fill(city)
-        self.state.fill(state)
-        self.zipcode.fill(zipcode)
+    def set_address_city_state_zipcode(self, address: str, city: str, state: str, zipcode: str):
+        self.address_input.fill(address)
+        self.city_input.fill(city)
+        self.state_input.fill(state)
+        self.zip_code_input.fill(zipcode)
 
-    def set_phone_ssn(self, number : int , ssn : str):
-        self.phone.fill(number)
-        self.ssn.fill(ssn)
+    def set_phone_ssn(self, phone: str, ssn: str):
+        self.phone_input.fill(phone)
+        self.ssn_input.fill(ssn)
 
-    def set_username(self, username : str ):
-        self.username.fill(username)
+    def set_username(self, username: str):
+        self.username_input.clear()
+        self.username_input.fill(username)
 
-    def set_password_conformpassword(self, password : str):
-        self.password.fill(password)
-        self.conformpassword.fill(password)
+    def set_password_conformpassword(self, password: str):
+        self.password_input.clear()
+        self.password_input.fill(password)
+        self.confirm_password_input.clear()
+        self.confirm_password_input.fill(password)
 
     def click_regestration(self):
-        self.regesterbutton.click()
+        self.register_button.click()
 
-    def complete_regestration(self , user_data : dict):
-        self.set_first_last_name(user_data["firstname"],user_data["lastname"])
-        self.set_address_city_state_zipcode(user_data["address"],user_data["city"],user_data["state"],user_data["zipcode"])
-        self.set_phone_ssn(user_data["phone"],user_data["ssn"])
-        self.set_username(user_data["username"])
-        self.set_password_conformpassword(user_data["password"])
-        self.click_regestration()
-
-        return self.msg_after_creation
     def click_logout(self):
-        self.logout.click()
+        logout_btn = self.page.locator("a", has_text="Log Out")
+        if logout_btn.is_visible():
+            logout_btn.click()

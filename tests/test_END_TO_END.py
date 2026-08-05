@@ -1,4 +1,3 @@
-import time
 import uuid
 import pytest
 from colorama import Fore, Style, init
@@ -11,28 +10,23 @@ from pages.AccountOverviewPage import AccountOverview
 from pages.transationDetails import TransationDetails
 from pages.findTransationsPage import FindTransations
 from utilities.utility_data import RandomDataUtil
-from config import Config
 
 init(autoreset=True)
 
 
 def test_E2E(page: Page):
-    # Ensure active session from previous tests is cleared
-    page.context.clear_cookies()
+    # Navigate & clear any existing session
+    page.goto("https://parabank.parasoft.com/parabank/index.htm")
+
+    homepage = HomePage(page)
+    register = Regestrationpage(page)
+
+    register.click_logout()
 
     # -------------------------------------------------------------
     # Step 1: User Registration
     # -------------------------------------------------------------
     print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "\nREGISTRATION IN PROCESS..............")
-    homepage = HomePage(page)
-    register = Regestrationpage(page)
-
-    # Navigate to home and ensure logout if session persists
-    page.goto("https://parabank.parasoft.com/parabank/index.htm")
-    logout_link = page.locator("a", has_text="Log Out")
-    if logout_link.is_visible():
-        logout_link.click()
-
     homepage.clickregisterationurl()
 
     fakerdata = RandomDataUtil()
@@ -45,19 +39,15 @@ def test_E2E(page: Page):
     phone = fakerdata.get_phone()
     ssn = fakerdata.get_ssn()
 
-    unique_username = f"usr_{time.time_ns()}_{uuid.uuid4().hex[:6]}"
+    unique_username = f"e2e_{uuid.uuid4().hex[:12]}"
     unique_password = fakerdata.get_random_password()
 
     register.set_first_last_name(firstname, lastname)
     register.set_address_city_state_zipcode(address, city, state, zipcode)
     register.set_phone_ssn(phone, ssn)
-
-    # Force clear input box in case browser auto-filled it
-    username_field = page.locator("input[id='customer.username']")
-    username_field.clear()
-    username_field.fill(unique_username)
-
+    register.set_username(unique_username)
     register.set_password_conformpassword(unique_password)
+
     register.click_regestration()
 
     expect(register.msg_after_creation).to_be_visible()
