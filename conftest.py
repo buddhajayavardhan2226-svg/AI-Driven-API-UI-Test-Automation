@@ -2,7 +2,7 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root directory to sys.path so 'utils' and other modules import cleanly
+# Add project root directory to sys.path FIRST before any local module imports
 PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -10,7 +10,9 @@ if str(PROJECT_ROOT) not in sys.path:
 import allure
 import pytest
 from playwright.sync_api import sync_playwright
-from utilities.read_config import Config
+
+# Direct import from root config.py
+from config import Config
 
 # Ensure required artifact folders exist before tests execute
 for folder in ["reports/videos", "reports/screenshots", "reports/traces"]:

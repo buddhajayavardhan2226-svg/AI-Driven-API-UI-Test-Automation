@@ -6,8 +6,9 @@ from pages.transfer_page import TransferamountPage
 from utilities.utility_data import RandomDataUtil
 
 
+@pytest.mark.order(5)
 def test_transation_page(page: Page):
-    print("\n testing login is running")
+    print("\n Testing login step...")
     loginpage = HomePage(page)
     config = Config()
 
@@ -21,8 +22,8 @@ def test_transation_page(page: Page):
     transfer_page = TransferamountPage(page)
     transfer_page.click_transfer_page_link()
 
-    # Wait for accounts to finish loading in dropdowns before interacting
-    page.wait_for_selector("#fromAccountId option")
+    # Wait for AJAX response to populate accounts dropdown
+    page.wait_for_selector("#fromAccountId option:nth-child(1)")
 
     # Step 3: Perform Transfer
     transfer_page.enter_amount(random_data.get_random_amount())
@@ -32,3 +33,4 @@ def test_transation_page(page: Page):
 
     # Step 4: Verification
     expect(transfer_page.msgg_after_transfer).to_be_visible()
+    print("\n Transfer funds test passed successfully.")
