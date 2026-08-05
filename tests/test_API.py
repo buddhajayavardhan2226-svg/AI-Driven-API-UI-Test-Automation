@@ -1,7 +1,14 @@
-import pytest
+import sys
 from pathlib import Path
+
+# Add project root directory to sys.path so 'utils' can be imported anywhere
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE_DIR))
+
+import pytest
 from playwright.sync_api import sync_playwright
 from utils.json_reader import read_json_data
+
 
 @pytest.mark.order(1)
 def test_parabank_api():
@@ -20,9 +27,8 @@ def test_parabank_api():
         assert init_res.status in [200, 204]
 
         # 3. Read Data & Register User via API
-        BASE_DIR = Path(__file__).resolve().parent.parent
-        DATA_PATH = BASE_DIR / "test_data" / "data.json"
-        user_data = read_json_data(file_path=str(DATA_PATH))
+        data_path = BASE_DIR / "test_data" / "data.json"
+        user_data = read_json_data(file_path=str(data_path))
 
         payload = {
             "customer.firstName": str(user_data["firstName"]),
@@ -47,7 +53,8 @@ def test_parabank_api():
             headers={"Accept": "application/json"}
         )
         assert res.ok
-        print(f"\nTOTAL NUMBER OF PATHS: {len(res.json().get('paths', {}))}")
+        paths = res.json().get("paths", {})
+        print(f"\nTOTAL NUMBER OF PATHS: {len(paths)}")
 
     finally:
         request_context.dispose()
