@@ -44,7 +44,7 @@ def test_regestrationpage(page: Page):
     register.click_regestration()
 
     # Verification
-    expect(register.msg_after_creation).to_be_visible(timeout=10000)
+    expect(register.msg_after_creation).to_be_visible(timeout=3000)
     print("\n Registration completed successfully.")
 
     register.click_logout()

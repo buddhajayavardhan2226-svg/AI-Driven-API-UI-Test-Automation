@@ -5,4 +5,4 @@ class Config:
     password = "jaya123!"
 
     invalid_username = "jayavara5"
-    invalid_password = ""
+    invalid_password = "12"
