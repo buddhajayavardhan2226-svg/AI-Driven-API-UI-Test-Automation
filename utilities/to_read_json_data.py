@@ -1,11 +1,9 @@
 import json
 
-
 def read_json_data(file_path: str):
     try:
         with open(file_path, "r") as file:
             return json.load(file)
-
     except Exception as e:
         print(f"Error reading JSON file: {e}")
-    return json_data
+        raise e  # Re-raise error instead of returning undefined 'json_data'
