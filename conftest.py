@@ -10,6 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
 import allure
 import pytest
 from playwright.sync_api import sync_playwright
+from utilities.read_config import Config
 
 # Ensure required artifact folders exist before tests execute
 for folder in ["reports/videos", "reports/screenshots", "reports/traces"]:
@@ -67,6 +68,39 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_registered_user():
+    """Ensures the static user in Config() is registered in ParaBank before running tests."""
+    config = Config()
+    base_url = "https://parabank.parasoft.com/parabank"
+
+    playwright = sync_playwright().start()
+    browser = playwright.chromium.launch(headless=True)
+    context = browser.new_context()
+    page = context.new_page()
+
+    try:
+        page.goto(f"{base_url}/register.htm")
+        page.get_by_name("customer.firstName").fill("Test")
+        page.get_by_name("customer.lastName").fill("User")
+        page.get_by_name("customer.address.street").fill("123 Main St")
+        page.get_by_name("customer.address.city").fill("City")
+        page.get_by_name("customer.address.state").fill("State")
+        page.get_by_name("customer.address.zipCode").fill("12345")
+        page.get_by_name("customer.phoneNumber").fill("1234567890")
+        page.get_by_name("customer.ssn").fill("000-00-0000")
+        page.get_by_name("customer.username").fill(config.username)
+        page.get_by_name("customer.password").fill(config.password)
+        page.get_by_name("repeatedPassword").fill(config.password)
+        page.get_by_role("button", name="Register").click()
+    except Exception:
+        pass  # If user already exists, ParaBank handles it gracefully
+    finally:
+        context.close()
+        browser.close()
+        playwright.stop()
 
 
 @pytest.fixture(scope="function")

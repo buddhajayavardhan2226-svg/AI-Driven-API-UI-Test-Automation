@@ -93,7 +93,7 @@ def test_E2E(page:Page):
     phone = fakerdata.get_phone()
     ssn = fakerdata.get_ssn()
     global username0
-    username0 = f"user_{uuid.uuid4().hex[:8]}"
+    username0 = f"usr_{int(time.time())}_{uuid.uuid4().hex[:4]}"
     global password0
     password0 = fakerdata.get_random_password()
     register.set_first_last_name(firstname, lastname)
