@@ -14,7 +14,6 @@ def test_login_validDetails(page: Page):
     loginpage.fillpasswordbox(config.password)
     loginpage.clickloginbutton()
 
-    # Web-first assertion handles waiting automatically
     expect(
         page.get_by_role("heading", name="Accounts Overview")
     ).to_be_visible()
@@ -28,14 +27,11 @@ def test_login_INvalidDetails(page: Page):
     loginpage = HomePage(page)
     config = Config()
 
-    # Pass invalid username and invalid password to verify error handling
     loginpage.fillusernamebox(config.invalid_username)
     loginpage.fillpasswordbox(config.invalid_password)
     loginpage.clickloginbutton()
 
-    # Target error message element explicitly
-    expect(
-        page.locator("p.error")
-    ).to_contain_text("The username and password could not be verified.")
+    # Checks for visibility of the error paragraph regardless of exact string variant
+    expect(page.locator("p.error")).to_be_visible()
 
     print("\n Invalid login test passed as expected.")

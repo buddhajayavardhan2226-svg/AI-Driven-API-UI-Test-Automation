@@ -8,7 +8,7 @@ from utilities.utility_data import RandomDataUtil
 
 @pytest.mark.order(5)
 def test_transation_page(page: Page):
-    print("\n Testing login step...")
+    print("\n Testing transfer page...")
     loginpage = HomePage(page)
     config = Config()
 
@@ -22,8 +22,8 @@ def test_transation_page(page: Page):
     transfer_page = TransferamountPage(page)
     transfer_page.click_transfer_page_link()
 
-    # Wait for AJAX response to populate accounts dropdown
-    page.wait_for_selector("#fromAccountId option:nth-child(1)")
+    # HTML <option> tags use 'attached' state rather than default 'visible'
+    page.wait_for_selector("#fromAccountId option", state="attached")
 
     # Step 3: Perform Transfer
     transfer_page.enter_amount(random_data.get_random_amount())
