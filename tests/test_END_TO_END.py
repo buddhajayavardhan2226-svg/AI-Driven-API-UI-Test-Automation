@@ -15,22 +15,24 @@ from config import Config
 
 init(autoreset=True)
 
-print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "\n STEPS FROM STARTING TO ENDING :-")
-print(Fore.LIGHTGREEN_EX + Style.BRIGHT + " =============================")
-print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "   1-USER REGISTRATION ")
-print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "   2-LOGIN WITH USER DETAILS AFTER REGESTRATION")
-print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "   3-TRANSFER AMOUNTS ")
-print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "   4-GO TO TRANSACTION DETAILS AND CHECK AMOUNT DEBITS THROUGH TRANSACTION ID AND DATE")
-print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "   5-FINALLY LOGOUT")
-
 
 def test_E2E(page: Page):
+    # Ensure active session from previous tests is cleared
+    page.context.clear_cookies()
+
     # -------------------------------------------------------------
     # Step 1: User Registration
     # -------------------------------------------------------------
     print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "\nREGISTRATION IN PROCESS..............")
     homepage = HomePage(page)
     register = Regestrationpage(page)
+
+    # Navigate to home and ensure logout if session persists
+    page.goto("https://parabank.parasoft.com/parabank/index.htm")
+    logout_link = page.locator("a", has_text="Log Out")
+    if logout_link.is_visible():
+        logout_link.click()
+
     homepage.clickregisterationurl()
 
     fakerdata = RandomDataUtil()
@@ -43,14 +45,18 @@ def test_E2E(page: Page):
     phone = fakerdata.get_phone()
     ssn = fakerdata.get_ssn()
 
-    # Guaranteed unique username using nanosecond precision + UUID hex
     unique_username = f"usr_{time.time_ns()}_{uuid.uuid4().hex[:6]}"
     unique_password = fakerdata.get_random_password()
 
     register.set_first_last_name(firstname, lastname)
     register.set_address_city_state_zipcode(address, city, state, zipcode)
     register.set_phone_ssn(phone, ssn)
-    register.set_username(unique_username)
+
+    # Force clear input box in case browser auto-filled it
+    username_field = page.locator("input[id='customer.username']")
+    username_field.clear()
+    username_field.fill(unique_username)
+
     register.set_password_conformpassword(unique_password)
     register.click_regestration()
 
@@ -81,7 +87,6 @@ def test_E2E(page: Page):
     transfer_page = TransferamountPage(page)
     transfer_page.click_transfer_page_link()
 
-    # Handle option tag state attached in select dropdown
     page.wait_for_selector("#fromAccountId option", state="attached")
 
     transfer_page.enter_amount(random_data.get_random_amount())
