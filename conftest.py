@@ -4,54 +4,59 @@ import allure
 import pytest
 from playwright.sync_api import sync_playwright
 
-
-def pytest_addoption(parser):
-    """Registers custom command-line flags and ini options so Pytest recognizes them."""
-
-    parser.addoption("--browser", action="store", default="chromium", help="Browser options: chromium, firefox, webkit")
-    parser.addoption("--headed", action="store_true", default=False, help="Run tests in headed mode")
-    parser.addoption("--base-url", action="store", default="https://parabank.parasoft.com/parabank", help="Base URL for application")
-    parser.addoption("--video", action="store", default="retain-on-failure", help="Video recording mode")
-    parser.addoption("--screenshot", action="store", default="only-on-failure", help="Screenshot capture mode")
-    parser.addoption("--tracing", action="store", default="retain-on-failure", help="Playwright trace capture mode")
-
-
-    parser.addini("browser", help="Default browser")
-    parser.addini("headed", help="Default headed state (true/false)")
-    parser.addini("base_url", help="Default base URL")
-    parser.addini("video", help="Default video setting")
-    parser.addini("screenshot", help="Default screenshot setting")
-    parser.addini("tracing", help="Default tracing setting")
-
-
-
+# Ensure required artifact folders exist before tests execute
 for folder in ["reports/videos", "reports/screenshots", "reports/traces"]:
     Path(folder).mkdir(parents=True, exist_ok=True)
 
 
-def get_config_value(config, option_name):
+def pytest_addoption(parser):
+    """Registers custom CLI flags and INI options safely without duplicate errors."""
+    def safe_addoption(*args, **kwargs):
+        try:
+            parser.addoption(*args, **kwargs)
+        except ValueError:
+            pass  # Avoid collision if added by external plugins like pytest-base-url
 
+    safe_addoption("--browser", action="store", default="chromium", help="Browser options: chromium, firefox, webkit")
+    safe_addoption("--headed", action="store_true", default=False, help="Run tests in headed mode")
+    safe_addoption("--base-url", action="store", default="https://parabank.parasoft.com/parabank", help="Base URL")
+    safe_addoption("--video", action="store", default="retain-on-failure", help="Video recording mode")
+    safe_addoption("--screenshot", action="store", default="only-on-failure", help="Screenshot capture mode")
+    safe_addoption("--tracing", action="store", default="retain-on-failure", help="Playwright trace capture mode")
+
+    # Register pytest.ini options
+    for ini_opt in ["browser", "headed", "base_url", "video", "screenshot", "tracing"]:
+        try:
+            parser.addini(ini_opt, help=f"Default {ini_opt}")
+        except ValueError:
+            pass
+
+
+def get_config_value(config, option_name):
+    """Reads configuration values from CLI flags or fallback to pytest.ini."""
+    for opt_format in [f"--{option_name}", option_name]:
+        try:
+            val = config.getoption(opt_format, None)
+            if val is not None and val != False:
+                return val
+        except (ValueError, AttributeError):
+            pass
 
     try:
-        cmd_value = config.getoption(f"--{option_name}", None)
-    except (ValueError, AttributeError):
-        cmd_value = None
-
-    if cmd_value is not None and cmd_value != False:
-        return cmd_value
-
-    ini_value = config.getini(option_name)
-    if ini_value:
-        if option_name == "headed":
-            return str(ini_value).lower() == "true"
-        return ini_value
+        ini_value = config.getini(option_name)
+        if ini_value:
+            if option_name == "headed":
+                return str(ini_value).lower() == "true"
+            return ini_value
+    except Exception:
+        pass
 
     return None
 
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-
+    """Captures test failure status for post-test artifact handling."""
     outcome = yield
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
@@ -59,12 +64,11 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture(scope="function")
 def browser_context(request):
-
+    """Creates and manages Playwright browser context, forcing headless in CI."""
     browser_name = get_config_value(request.config, "browser") or "chromium"
     headed_flag = get_config_value(request.config, "headed") or False
     video_option = get_config_value(request.config, "video") or "retain-on-failure"
 
-    # Enforce headless mode in CI environments regardless of local ini config
     is_ci = os.getenv("CI") == "true"
     run_headless = True if is_ci else not headed_flag
 
@@ -102,13 +106,11 @@ def browser_context(request):
 
 @pytest.fixture(scope="function")
 def page(request, browser_context):
-
+    """Creates browser page, handles tracing, screenshots, and Allure reporting."""
     base_url = get_config_value(request.config, "base_url") or "https://parabank.parasoft.com/parabank"
     screenshot_option = get_config_value(request.config, "screenshot") or "only-on-failure"
     tracing_option = get_config_value(request.config, "tracing") or "retain-on-failure"
     video_option = get_config_value(request.config, "video") or "retain-on-failure"
-
-    print(f"[INFO] Navigating to: {base_url}")
 
     if tracing_option in ["on", "retain-on-failure"]:
         browser_context.tracing.start(screenshots=True, snapshots=True, sources=True)
@@ -120,8 +122,6 @@ def page(request, browser_context):
 
     test_name = request.node.name
     test_failed = hasattr(request.node, "rep_call") and request.node.rep_call.failed
-
-    print(f"[RESULT] Test '{test_name}' result: {'[FAIL]' if test_failed else '[PASS]'}")
 
     if tracing_option in ["on", "retain-on-failure"]:
         trace_path = f"reports/traces/{test_name}_trace.zip"
