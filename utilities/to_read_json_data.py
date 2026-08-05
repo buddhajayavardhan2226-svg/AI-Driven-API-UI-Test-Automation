@@ -6,4 +6,4 @@ def read_json_data(file_path: str):
             return json.load(file)
     except Exception as e:
         print(f"Error reading JSON file: {e}")
-        raise e  # Re-raise error instead of returning undefined 'json_data'
+        raise e
