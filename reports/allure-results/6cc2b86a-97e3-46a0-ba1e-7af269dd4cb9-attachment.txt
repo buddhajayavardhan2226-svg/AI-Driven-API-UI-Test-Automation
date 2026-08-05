@@ -1,0 +1,8 @@
+[OK] Starting browser: ['chromium']
+[OK] Headless mode: False (headed=True)
+[INFO] Navigating to: https://parabank.parasoft.com/parabank
+[TRACE] Tracing enabled - capturing screenshots and actions
+yes your login successful
+[RESULT] Test 'test_regestrationpage' result: [PASS]
+[SAVE] Trace saved: reports/traces/test_regestrationpage_trace.zip
+[CLEANUP] Closing browser context and stopping Playwright...
