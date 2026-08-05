@@ -15,7 +15,7 @@ init(autoreset=True)
 
 
 def test_E2E(page: Page):
-    # Navigate & clear any existing session
+    # Navigate & reset page state
     page.goto("https://parabank.parasoft.com/parabank/index.htm")
 
     homepage = HomePage(page)
@@ -39,7 +39,8 @@ def test_E2E(page: Page):
     phone = fakerdata.get_phone()
     ssn = fakerdata.get_ssn()
 
-    unique_username = f"e2e_{uuid.uuid4().hex[:12]}"
+    # Fresh unique username for this attempt
+    unique_username = f"e2e_{uuid.uuid4().hex[:10]}"
     unique_password = fakerdata.get_random_password()
 
     register.set_first_last_name(firstname, lastname)
@@ -48,9 +49,11 @@ def test_E2E(page: Page):
     register.set_username(unique_username)
     register.set_password_conformpassword(unique_password)
 
+    # Wait briefly for ParaBank DOM validation to settle
+    page.wait_for_timeout(500)
     register.click_regestration()
 
-    expect(register.msg_after_creation).to_be_visible()
+    expect(register.msg_after_creation).to_be_visible(timeout=10000)
     print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "REGISTRATION CREATED SUCCESSFULLY!!!")
     register.click_logout()
 

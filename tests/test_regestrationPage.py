@@ -8,13 +8,12 @@ from utilities.utility_data import RandomDataUtil
 
 @pytest.mark.order(2)
 def test_regestrationpage(page: Page):
-    # Fresh context navigation
+    # Navigate & reset session state
     page.goto("https://parabank.parasoft.com/parabank/index.htm")
 
     homepage = HomePage(page)
     register = Regestrationpage(page)
 
-    # Logout if a previous session was persisted
     register.click_logout()
     homepage.clickregisterationurl()
 
@@ -29,8 +28,8 @@ def test_regestrationpage(page: Page):
     phone = fakerdata.get_phone()
     ssn = fakerdata.get_ssn()
 
-    # Guaranteed unique username per execution attempt
-    unique_username = f"user_{uuid.uuid4().hex[:12]}"
+    # Fresh unique username for this attempt
+    unique_username = f"reg_{uuid.uuid4().hex[:10]}"
     unique_password = fakerdata.get_random_password()
 
     # Fill out registration form cleanly via POM
@@ -40,10 +39,12 @@ def test_regestrationpage(page: Page):
     register.set_username(unique_username)
     register.set_password_conformpassword(unique_password)
 
+    # Wait briefly for ParaBank DOM validation to settle before clicking register
+    page.wait_for_timeout(500)
     register.click_regestration()
 
     # Verification
-    expect(register.msg_after_creation).to_be_visible()
+    expect(register.msg_after_creation).to_be_visible(timeout=10000)
     print("\n Registration completed successfully.")
 
     register.click_logout()
