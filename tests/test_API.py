@@ -1,14 +1,14 @@
 import sys
 from pathlib import Path
 
-# Add project root directory to sys.path so 'utils' can be imported anywhere
+# MUST BE BEFORE 'from utils...' IMPORTS
 BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(BASE_DIR))
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 import pytest
 from playwright.sync_api import sync_playwright
-from utils.json_reader import read_json_data
-
+from utilities.to_read_json_data import read_json_data
 
 @pytest.mark.order(1)
 def test_parabank_api():
