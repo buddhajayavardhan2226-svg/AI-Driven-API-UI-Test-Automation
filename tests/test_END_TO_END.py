@@ -43,15 +43,15 @@ def test_E2E(page: Page):
     phone = fakerdata.get_phone()
     ssn = fakerdata.get_ssn()
 
-    # Generate brand-new unique username per execution attempt
-    username = f"usr_{int(time.time())}_{uuid.uuid4().hex[:4]}"
-    password = fakerdata.get_random_password()
+    # Guaranteed unique username using nanosecond precision + UUID hex
+    unique_username = f"usr_{time.time_ns()}_{uuid.uuid4().hex[:6]}"
+    unique_password = fakerdata.get_random_password()
 
     register.set_first_last_name(firstname, lastname)
     register.set_address_city_state_zipcode(address, city, state, zipcode)
     register.set_phone_ssn(phone, ssn)
-    register.set_username(username)
-    register.set_password_conformpassword(password)
+    register.set_username(unique_username)
+    register.set_password_conformpassword(unique_password)
     register.click_regestration()
 
     expect(register.msg_after_creation).to_be_visible()
@@ -59,14 +59,13 @@ def test_E2E(page: Page):
     register.click_logout()
 
     # -------------------------------------------------------------
-    # Step 2: Login
+    # Step 2: Login using the newly created credentials
     # -------------------------------------------------------------
     print(Fore.LIGHTGREEN_EX + Style.BRIGHT + "\nLOGIN IS IN PROCESS..............")
     loginpage = HomePage(page)
-    config = Config()
 
-    loginpage.fillusernamebox(config.username)
-    loginpage.fillpasswordbox(config.password)
+    loginpage.fillusernamebox(unique_username)
+    loginpage.fillpasswordbox(unique_password)
     loginpage.clickloginbutton()
 
     expect(
@@ -82,7 +81,7 @@ def test_E2E(page: Page):
     transfer_page = TransferamountPage(page)
     transfer_page.click_transfer_page_link()
 
-    # Wait for attached DOM option elements inside select dropdowns
+    # Handle option tag state attached in select dropdown
     page.wait_for_selector("#fromAccountId option", state="attached")
 
     transfer_page.enter_amount(random_data.get_random_amount())
