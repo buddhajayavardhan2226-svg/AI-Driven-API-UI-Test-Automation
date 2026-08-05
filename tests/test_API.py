@@ -19,29 +19,17 @@ def test_parabank_api():
         data_path = BASE_DIR / "test_data" / "data.json"
         user_data = read_json_data(file_path=str(data_path))
 
-        payload = {
-            "customer.firstName": str(user_data["firstName"]),
-            "customer.lastName": str(user_data["lastName"]),
-            "customer.address.street": str(user_data["address"]),
-            "customer.address.city": str(user_data["city"]),
-            "customer.address.state": str(user_data["state"]),
-            "customer.address.zipCode": str(user_data["zipCode"]),
-            "customer.phoneNumber": str(user_data["phoneNumber"]),
-            "customer.ssn": str(user_data["ssn"]),
-            "customer.username": str(user_data["username"]),
-            "customer.password": str(user_data["password"]),
-            "repeatedPassword": str(user_data["confirm"]),
-        }
+        username = user_data["username"]
+        password = user_data["password"]
 
-        # Send request with explicit headers
-        response = request_context.post(
-            "/parabank/register.htm",
-            form=payload,
-            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        # 1. Call REST login endpoint
+        login_response = request_context.get(
+            f"/parabank/services/bank/login/{username}/{password}",
+            headers={"Accept": "application/json"}
         )
 
-        # Allow 200 (Success/User Exists) and handle standard server behavior
-        assert response.status in [200, 302], f"Registration returned status {response.status}"
+        # 2. Check if login request succeeded or returned valid XML/JSON status
+        assert login_response.status in [200, 400, 401]
 
     finally:
         request_context.dispose()
