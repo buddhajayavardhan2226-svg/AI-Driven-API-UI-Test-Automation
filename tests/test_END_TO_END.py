@@ -9,6 +9,7 @@ from pages.findTransationsPage import FindTransations
 from utilities.utility_data import RandomDataUtil
 from config import *
 import time
+import uuid
 
 from utilities.to_read_json_data import read_json_data
 from colorama import Fore , init , Style
@@ -92,7 +93,7 @@ def test_E2E(page:Page):
     phone = fakerdata.get_phone()
     ssn = fakerdata.get_ssn()
     global username0
-    username0 = f"{int(time.time())}_jayavara"
+    username0 = f"user_{uuid.uuid4().hex[:8]}"
     global password0
     password0 = fakerdata.get_random_password()
     register.set_first_last_name(firstname, lastname)
