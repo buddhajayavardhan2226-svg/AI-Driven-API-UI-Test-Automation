@@ -29,45 +29,39 @@ for folder in ["reports/videos", "reports/screenshots", "reports/traces"]:
 
 
 def pytest_addoption(parser):
-    """Registers custom CLI flags and INI options safely without duplicate errors."""
-
-    def safe_addoption(*args, **kwargs):
-        try:
-            parser.addoption(*args, **kwargs)
-        except ValueError:
-            pass  # Avoid collision with pytest-playwright built-in options
-
-    # Note: Removed redundant '--browser' registration as pytest-playwright manages it natively
-    safe_addoption("--headed", action="store_true", default=False, help="Run tests in headed mode")
-    safe_addoption("--base-url", action="store", default="https://parabank.parasoft.com/parabank", help="Base URL")
-    safe_addoption("--video", action="store", default="retain-on-failure", help="Video recording mode")
-    safe_addoption("--screenshot", action="store", default="only-on-failure", help="Screenshot capture mode")
-    safe_addoption("--tracing", action="store", default="retain-on-failure", help="Playwright trace capture mode")
-
-    # Register pytest.ini options
+    """
+    Registers custom ini options safely.
+    CLI flags (--browser, --headed, --tracing, --video, --screenshot, --base-url)
+    are managed natively by pytest-playwright and do not need duplicate registration.
+    """
     for ini_opt in ["browser", "headed", "base_url", "video", "screenshot", "tracing"]:
         try:
-            parser.addini(ini_opt, help=f"Default {ini_opt}")
+            parser.addini(ini_opt, help=f"Default {ini_opt} setting")
         except ValueError:
             pass
 
 
 def get_config_value(config, option_name):
-    """Reads configuration values from CLI flags or fallback to pytest.ini."""
-    for opt_format in [f"--{option_name}", option_name]:
+    """
+    Safely retrieves configuration values from pytest-playwright CLI flags,
+    pytest.ini, or falls back to standard defaults.
+    """
+    # 1. Check CLI options registered by pytest-playwright
+    for opt_key in [option_name, f"--{option_name}"]:
         try:
-            val = config.getoption(opt_format, None)
-            if val is not None and val != False:
+            val = config.getoption(opt_key, None)
+            if val is not None and val is not False:
                 return val
         except (ValueError, AttributeError):
             pass
 
+    # 2. Fall back to pytest.ini values
     try:
-        ini_value = config.getini(option_name)
-        if ini_value:
+        ini_val = config.getini(option_name)
+        if ini_val:
             if option_name == "headed":
-                return str(ini_value).lower() == "true"
-            return ini_value
+                return str(ini_val).lower() == "true"
+            return ini_val
     except Exception:
         pass
 
@@ -81,7 +75,7 @@ def pytest_runtest_makereport(item, call):
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
 
-    # Capture details for ANY failed stage (setup, call, teardown)
+    # Capture details for ANY failed stage
     if report.failed:
         error_details = str(report.longrepr)
 
@@ -96,11 +90,10 @@ def pytest_runtest_makereport(item, call):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """Hooks into session completion to send ALL aggregated failed tests to n8n in a single request."""
+    """Hooks into session completion to send ALL aggregated failed tests to n8n in a single payload."""
     if SUITE_FAILURES_LIST:
         print(f"\n[TestOps Engine] Suite Execution Complete. Total Failures Captured: {len(SUITE_FAILURES_LIST)}")
 
-        # Build consolidated text prompt for n8n AI Agent
         formatted_failures_text = ""
         for idx, failure in enumerate(SUITE_FAILURES_LIST, 1):
             formatted_failures_text += (
@@ -168,27 +161,27 @@ def setup_registered_user():
 @pytest.fixture(scope="function")
 def browser_context(request):
     """Creates and manages Playwright browser context, forcing headless in CI."""
-    browser_name = get_config_value(request.config, "browser") or "chromium"
+    raw_browser = get_config_value(request.config, "browser") or "chromium"
     headed_flag = get_config_value(request.config, "headed") or False
     video_option = get_config_value(request.config, "video") or "retain-on-failure"
 
+    # Handle list return type if pytest-playwright returns ['chromium']
+    browser_name = raw_browser[0] if isinstance(raw_browser, list) else str(raw_browser)
+
     is_ci = os.getenv("CI") == "true"
-    run_headless = True if is_ci else not headed_flag
+    run_headless = True if is_ci else not bool(headed_flag)
 
     print(f"[OK] Starting browser: {browser_name}")
     print(f"[OK] Headless mode: {run_headless} (CI={is_ci})")
 
     playwright = sync_playwright().start()
+    browser_type = browser_name.lower()
 
-    if isinstance(browser_name, list):
-        browser_name = browser_name[0]
-
-    browser_type = str(browser_name).lower()
     if browser_type == "chromium":
         browser = playwright.chromium.launch(headless=run_headless)
     elif browser_type == "firefox":
         browser = playwright.firefox.launch(headless=run_headless)
-    elif browser_type == "webkit":
+    elif browser_type in ["webkit", "safari"]:
         browser = playwright.webkit.launch(headless=run_headless)
     else:
         playwright.stop()
