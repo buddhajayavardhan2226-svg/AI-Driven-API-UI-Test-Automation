@@ -35,9 +35,9 @@ def pytest_addoption(parser):
         try:
             parser.addoption(*args, **kwargs)
         except ValueError:
-            pass  # Avoid collision if added by external plugins like pytest-base-url
+            pass  # Avoid collision with pytest-playwright built-in options
 
-    safe_addoption("--browser", action="store", default="chromium", help="Browser options: chromium, firefox, webkit")
+    # Note: Removed redundant '--browser' registration as pytest-playwright manages it natively
     safe_addoption("--headed", action="store_true", default=False, help="Run tests in headed mode")
     safe_addoption("--base-url", action="store", default="https://parabank.parasoft.com/parabank", help="Base URL")
     safe_addoption("--video", action="store", default="retain-on-failure", help="Video recording mode")
