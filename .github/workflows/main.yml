@@ -49,7 +49,7 @@ jobs:
       - name: Execute Playwright Tests with Pytest
         id: run_tests
         run: |
-          python -m pytest --alluredir=allure-results
+          python -m pytest --alluredir=allure-results | tee pytest_output.log
         continue-on-error: true
 
       - name: Generate Allure HTML Report
@@ -69,14 +69,29 @@ jobs:
           retention-days: 7
 
       - name: Trigger n8n Webhook on Failure
-        if: always() # Or use if: failure() to send ONLY when tests fail
+        if: always()
         run: |
+          # 1. Grab terminal output snippet if available
+          if [ -f pytest_output.log ]; then
+            TEST_LOG=$(tail -n 100 pytest_output.log)
+          else
+            TEST_LOG="No log captured."
+          fi
+
+          # 2. Build complete failure text
+          PROMPT_TEXT="--- COMPLETE TEST SUITE FAILURE REPORT ---
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Run ID: ${{ github.run_id }}
+          Status: ${{ steps.run_tests.outcome }}
+
+          --- TERMINAL OUTPUT ---
+          $TEST_LOG"
+
+          # 3. Format as valid JSON containing 'chatInput' key
+          JSON_PAYLOAD=$(jq -n --arg chatInput "$PROMPT_TEXT" '{chatInput: $chatInput}')
+
+          # 4. POST to n8n webhook
           curl -X POST "$N8N_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
-            -d '{
-              "status": "${{ steps.run_tests.outcome }}",
-              "repository": "${{ github.repository }}",
-              "branch": "${{ github.ref_name }}",
-              "run_id": "${{ github.run_id }}",
-              "actor": "${{ github.actor }}"
-            }'
+            -d "$JSON_PAYLOAD"
