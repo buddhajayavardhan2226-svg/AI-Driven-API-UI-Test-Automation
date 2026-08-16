@@ -11,7 +11,7 @@ def test_login_validDetails(page: Page):
     config = Config()
 
     loginpage.fillusernamebox(config.username)
-    loginpage.fillpasswordbox(config.password)
+    loginpage.fillpasswordbox("config.password")
     loginpage.clickloginbutton()
 
     expect(

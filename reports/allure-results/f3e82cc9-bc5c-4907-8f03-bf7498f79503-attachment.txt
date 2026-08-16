@@ -1,7 +1,0 @@
-[OK] Starting browser: chromium
-[OK] Headless mode: False (CI=False)
-
- Testing login with invalid details...
-
- Invalid login test passed as expected.
-[CLEANUP] Closing browser context and stopping Playwright...

@@ -1,7 +1,0 @@
-[OK] Starting browser: chromium
-[OK] Headless mode: False (CI=False)
-
- Testing transfer page...
-
- Transfer funds test passed successfully.
-[CLEANUP] Closing browser context and stopping Playwright...

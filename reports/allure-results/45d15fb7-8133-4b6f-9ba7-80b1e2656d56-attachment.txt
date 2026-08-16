@@ -1,5 +1,0 @@
-[OK] Starting browser: chromium
-[OK] Headless mode: True (CI=False)
-
- Registration completed successfully.
-[CLEANUP] Closing browser context and stopping Playwright...

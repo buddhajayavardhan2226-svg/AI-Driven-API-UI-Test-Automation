@@ -23,7 +23,7 @@ def test_transation_page(page: Page):
     transfer_page.click_transfer_page_link()
 
     # HTML <option> tags use 'attached' state rather than default 'visible'
-    page.wait_for_selector("#fromAccountId option", state="attached")
+    page.wait_for_selector("#fromAccountId optionuuuuvvvuuu", state="attached")
 
     # Step 3: Perform Transfer
     transfer_page.enter_amount(random_data.get_random_amount())

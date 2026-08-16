@@ -1,5 +1,6 @@
 import os
 import sys
+import requests
 from pathlib import Path
 
 # Add project root directory to sys.path FIRST before any local module imports
@@ -14,6 +15,15 @@ from playwright.sync_api import sync_playwright
 # Direct import from root config.py
 from config import Config
 
+# n8n Webhook Configuration (Can be overridden via ENV variable in CI)
+N8N_WEBHOOK_URL = os.getenv(
+    "N8N_WEBHOOK_URL",
+    "https://jayava.app.n8n.cloud/webhook-test/playwright-failure"
+)
+
+# Global list to aggregate ALL failed test cases during a test run session
+SUITE_FAILURES_LIST = []
+
 # Ensure required artifact folders exist before tests execute
 for folder in ["reports/videos", "reports/screenshots", "reports/traces"]:
     Path(folder).mkdir(parents=True, exist_ok=True)
@@ -21,6 +31,7 @@ for folder in ["reports/videos", "reports/screenshots", "reports/traces"]:
 
 def pytest_addoption(parser):
     """Registers custom CLI flags and INI options safely without duplicate errors."""
+
     def safe_addoption(*args, **kwargs):
         try:
             parser.addoption(*args, **kwargs)
@@ -66,10 +77,59 @@ def get_config_value(config, option_name):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Captures test failure status for post-test artifact handling."""
+    """Captures test failure details and appends them to the global session list."""
     outcome = yield
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
+
+    # Capture details for EVERY failed test during the execution call phase
+    if report.when == "call" and report.failed:
+        error_details = str(report.longrepr)
+
+        # Store structured failure data in our session list
+        SUITE_FAILURES_LIST.append({
+            "test_name": item.name,
+            "file_path": str(item.fspath),
+            "failure_stage": report.when,
+            "stacktrace": error_details
+        })
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Hooks into session completion to send ALL aggregated failed tests to n8n in a single request."""
+    if SUITE_FAILURES_LIST:
+        print(f"\n[TestOps Engine] Suite Execution Complete. Total Failures Captured: {len(SUITE_FAILURES_LIST)}")
+
+        # Build consolidated text prompt for n8n AI Agent
+        formatted_failures_text = ""
+        for idx, failure in enumerate(SUITE_FAILURES_LIST, 1):
+            formatted_failures_text += (
+                f"\n--- FAILED TEST #{idx} ---\n"
+                f"Test Name: {failure['test_name']}\n"
+                f"File Path: {failure['file_path']}\n"
+                f"Failure Stage: {failure['failure_stage']}\n"
+                f"--- STACKTRACE START ---\n"
+                f"{failure['stacktrace']}\n"
+                f"--- STACKTRACE END ---\n"
+            )
+
+        payload = {
+            "total_failures_count": len(SUITE_FAILURES_LIST),
+            "chatInput": (
+                f"--- COMPLETE TEST SUITE FAILURE REPORT ---\n"
+                f"Total Failed Tests: {len(SUITE_FAILURES_LIST)}\n"
+                f"{formatted_failures_text}"
+            ),
+            "raw_failures": SUITE_FAILURES_LIST
+        }
+
+        try:
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(N8N_WEBHOOK_URL, json=payload, headers=headers, timeout=15)
+            print(
+                f"[TestOps Engine] Successfully dispatched consolidated report for all {len(SUITE_FAILURES_LIST)} failures to n8n | Status: {response.status_code}")
+        except Exception as e:
+            print(f"[TestOps Engine Warning] n8n Webhook dispatch skipped/failed: {e}")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -85,17 +145,17 @@ def setup_registered_user():
 
     try:
         page.goto(f"{base_url}/register.htm")
-        page.get_by_name("customer.firstName").fill("Test")
-        page.get_by_name("customer.lastName").fill("User")
-        page.get_by_name("customer.address.street").fill("123 Main St")
-        page.get_by_name("customer.address.city").fill("City")
-        page.get_by_name("customer.address.state").fill("State")
-        page.get_by_name("customer.address.zipCode").fill("12345")
-        page.get_by_name("customer.phoneNumber").fill("1234567890")
-        page.get_by_name("customer.ssn").fill("000-00-0000")
-        page.get_by_name("customer.username").fill(config.username)
-        page.get_by_name("customer.password").fill(config.password)
-        page.get_by_name("repeatedPassword").fill(config.password)
+        page.locator("[name='customer.firstName']").fill("Test")
+        page.locator("[name='customer.lastName']").fill("User")
+        page.locator("[name='customer.address.street']").fill("123 Main St")
+        page.locator("[name='customer.address.city']").fill("City")
+        page.locator("[name='customer.address.state']").fill("State")
+        page.locator("[name='customer.address.zipCode']").fill("12345")
+        page.locator("[name='customer.phoneNumber']").fill("1234567890")
+        page.locator("[name='customer.ssn']").fill("000-00-0000")
+        page.locator("[name='customer.username']").fill(config.username)
+        page.locator("[name='customer.password']").fill(config.password)
+        page.locator("[name='repeatedPassword']").fill(config.password)
         page.get_by_role("button", name="Register").click()
     except Exception:
         pass  # If user already exists, ParaBank handles it gracefully
