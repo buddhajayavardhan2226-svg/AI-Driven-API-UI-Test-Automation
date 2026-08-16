@@ -14,8 +14,7 @@ jobs:
     env:
       CI: "true"
       PYTHONPATH: "."
-      # Optional: Put Production n8n webhook URL here when ready
-      N8N_WEBHOOK_URL: "https://jayava.app.n8n.cloud/webhook-test/playwright-failure"
+      N8N_WEBHOOK_URL: "https://jayava.app.n8n.cloud/webhook/playwright-failure"
 
     steps:
       - name: Checkout Code Repository
@@ -48,8 +47,9 @@ jobs:
           mkdir -p reports/videos reports/screenshots reports/traces allure-results allure-report
 
       - name: Execute Playwright Tests with Pytest
+        id: run_tests
         run: |
-          python -m pytest -p no:playwright --alluredir=allure-results
+          python -m pytest --alluredir=allure-results
         continue-on-error: true
 
       - name: Generate Allure HTML Report
@@ -67,3 +67,16 @@ jobs:
             allure-results/
             allure-report/
           retention-days: 7
+
+      - name: Trigger n8n Webhook on Failure
+        if: always() # Or use if: failure() to send ONLY when tests fail
+        run: |
+          curl -X POST "$N8N_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "status": "${{ steps.run_tests.outcome }}",
+              "repository": "${{ github.repository }}",
+              "branch": "${{ github.ref_name }}",
+              "run_id": "${{ github.run_id }}",
+              "actor": "${{ github.actor }}"
+            }'
