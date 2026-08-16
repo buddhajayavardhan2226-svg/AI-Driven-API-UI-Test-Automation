@@ -24,7 +24,6 @@ N8N_WEBHOOK_URL = os.getenv(
 # Global list to aggregate ALL failed test cases during a test run session
 SUITE_FAILURES_LIST = []
 
-# Ensure required artifact folders exist before tests execute
 for folder in ["reports/videos", "reports/screenshots", "reports/traces"]:
     Path(folder).mkdir(parents=True, exist_ok=True)
 
