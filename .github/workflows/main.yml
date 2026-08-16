@@ -49,8 +49,7 @@ jobs:
       - name: Execute Playwright Tests with Pytest
         id: run_tests
         run: |
-          # conftest.py pytest_sessionfinish hook will send the exact PyCharm payload directly to N8N_WEBHOOK_URL
-          python -m pytest -s -v --alluredir=allure-results 2>&1 | tee pytest_output.log
+          python -m pytest -s -v --tb=short --alluredir=allure-results 2>&1 | tee pytest_output.log
         continue-on-error: true
 
       - name: Generate Allure HTML Report
@@ -69,31 +68,37 @@ jobs:
             allure-report/
           retention-days: 7
 
-      - name: Fallback Webhook Dispatch (If Pytest Process Crashed)
-        if: steps.run_tests.outcome == 'failure'
+      - name: Trigger n8n Webhook Always
+        if: always()
         run: |
-          # This step only triggers if pytest crashed before conftest sessionfinish could send the webhook
+          # 1. Read terminal log output
           if [ -f pytest_output.log ]; then
             TEST_LOG=$(cat pytest_output.log)
           else
-            TEST_LOG="No log captured."
+            TEST_LOG="No test log file found."
           fi
 
+          # 2. Format exact chatInput string matching PyCharm's format
           PROMPT_TEXT="--- COMPLETE TEST SUITE FAILURE REPORT ---
-          Total Failed Tests: 1
-          --- FAILED TEST #1 ---
-          Test Name: GitHub Actions Execution Error
-          File Path: .github/workflows/main.yml
-          Failure Stage: call
-          --- STACKTRACE START ---
-          $TEST_LOG
-          --- STACKTRACE END ---"
+          Repository: ${{ github.repository }}
+          Branch: ${{ github.ref_name }}
+          Run ID: ${{ github.run_id }}
+          Status: ${{ steps.run_tests.outcome }}
 
+          --- TERMINAL STACKTRACE & LOGS ---
+          $TEST_LOG"
+
+          # 3. Construct JSON payload with exact key structure
           JSON_PAYLOAD=$(jq -n \
             --arg chatInput "$PROMPT_TEXT" \
             --argjson total_failures_count 1 \
-            '{total_failures_count: $total_failures_count, chatInput: $chatInput, raw_failures: []}')
+            '{
+              total_failures_count: $total_failures_count,
+              chatInput: $chatInput,
+              raw_failures: []
+            }')
 
+          # 4. Dispatch request
           curl -X POST "$N8N_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD"
