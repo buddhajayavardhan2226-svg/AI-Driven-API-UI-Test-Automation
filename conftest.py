@@ -76,22 +76,23 @@ def get_config_value(config, option_name):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Captures test failure details and appends them to the global session list."""
+    """Captures test failure details across all stages (setup, call, teardown)."""
     outcome = yield
     report = outcome.get_result()
     setattr(item, f"rep_{report.when}", report)
 
-    # Capture details for EVERY failed test during the execution call phase
-    if report.when == "call" and report.failed:
+    # Capture details for ANY failed stage (setup, call, teardown)
+    if report.failed:
         error_details = str(report.longrepr)
 
-        # Store structured failure data in our session list
-        SUITE_FAILURES_LIST.append({
-            "test_name": item.name,
-            "file_path": str(item.fspath),
-            "failure_stage": report.when,
-            "stacktrace": error_details
-        })
+        # Prevent duplicate entries for the same test if multiple stages fail
+        if not any(f["test_name"] == item.name for f in SUITE_FAILURES_LIST):
+            SUITE_FAILURES_LIST.append({
+                "test_name": item.name,
+                "file_path": str(item.fspath),
+                "failure_stage": report.when,
+                "stacktrace": error_details
+            })
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -223,7 +224,11 @@ def page(request, browser_context):
     yield page
 
     test_name = request.node.name
-    test_failed = hasattr(request.node, "rep_call") and request.node.rep_call.failed
+    test_failed = (
+        (hasattr(request.node, "rep_setup") and request.node.rep_setup.failed) or
+        (hasattr(request.node, "rep_call") and request.node.rep_call.failed) or
+        (hasattr(request.node, "rep_teardown") and request.node.rep_teardown.failed)
+    )
 
     if tracing_option in ["on", "retain-on-failure"]:
         trace_path = f"reports/traces/{test_name}_trace.zip"
