@@ -18,7 +18,7 @@ from config import Config
 # n8n Webhook Configuration (Can be overridden via ENV variable in CI)
 N8N_WEBHOOK_URL = os.getenv(
     "N8N_WEBHOOK_URL",
-    "https://jayava.app.n8n.cloud/webhook-test/playwright-failure"
+    "https://jayava.app.n8n.cloud/webhook/playwright-failure"
 )
 
 # Global list to aggregate ALL failed test cases during a test run session
