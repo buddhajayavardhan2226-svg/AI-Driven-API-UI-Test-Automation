@@ -49,7 +49,8 @@ jobs:
       - name: Execute Playwright Tests with Pytest
         id: run_tests
         run: |
-          python -m pytest --alluredir=allure-results | tee pytest_output.log
+          # conftest.py pytest_sessionfinish hook will send the exact PyCharm payload directly to N8N_WEBHOOK_URL
+          python -m pytest -s -v --alluredir=allure-results 2>&1 | tee pytest_output.log
         continue-on-error: true
 
       - name: Generate Allure HTML Report
@@ -68,30 +69,31 @@ jobs:
             allure-report/
           retention-days: 7
 
-      - name: Trigger n8n Webhook on Failure
-        if: always()
+      - name: Fallback Webhook Dispatch (If Pytest Process Crashed)
+        if: steps.run_tests.outcome == 'failure'
         run: |
-          # 1. Grab terminal output snippet if available
+          # This step only triggers if pytest crashed before conftest sessionfinish could send the webhook
           if [ -f pytest_output.log ]; then
-            TEST_LOG=$(tail -n 100 pytest_output.log)
+            TEST_LOG=$(cat pytest_output.log)
           else
             TEST_LOG="No log captured."
           fi
 
-          # 2. Build complete failure text
           PROMPT_TEXT="--- COMPLETE TEST SUITE FAILURE REPORT ---
-          Repository: ${{ github.repository }}
-          Branch: ${{ github.ref_name }}
-          Run ID: ${{ github.run_id }}
-          Status: ${{ steps.run_tests.outcome }}
+          Total Failed Tests: 1
+          --- FAILED TEST #1 ---
+          Test Name: GitHub Actions Execution Error
+          File Path: .github/workflows/main.yml
+          Failure Stage: call
+          --- STACKTRACE START ---
+          $TEST_LOG
+          --- STACKTRACE END ---"
 
-          --- TERMINAL OUTPUT ---
-          $TEST_LOG"
+          JSON_PAYLOAD=$(jq -n \
+            --arg chatInput "$PROMPT_TEXT" \
+            --argjson total_failures_count 1 \
+            '{total_failures_count: $total_failures_count, chatInput: $chatInput, raw_failures: []}')
 
-          # 3. Format as valid JSON containing 'chatInput' key
-          JSON_PAYLOAD=$(jq -n --arg chatInput "$PROMPT_TEXT" '{chatInput: $chatInput}')
-
-          # 4. POST to n8n webhook
           curl -X POST "$N8N_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD"
