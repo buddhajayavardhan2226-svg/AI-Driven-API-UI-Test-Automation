@@ -190,7 +190,7 @@ The n8n workflow:
 3. Generates a structured root-cause analysis and a recommended fix
 4. Emails the report via the Gmail node
 
-**Demonstration run:** to validate the pipeline end-to-end, two tests were intentionally broken — `test_login.py::test_login_validDetails` (an incorrect password argument) and `test_transfer_page.py::test_transation_page` (a malformed CSS selector). The AI agent correctly diagnosed both failures and emailed a report identifying the exact cause and fix for each, without any manual log inspection.
+**Demonstration run:** to validate the pipeline end-to-end, two tests were intentionally broken in `test_login.py::test_login_validDetails` (an incorrect password argument) and `test_transfer_page.py::test_transation_page` (a malformed CSS selector). The AI agent correctly diagnosed both failures and emailed a report identifying the exact cause and fix for each, without any manual log inspection.
 
 <p align="center">
   <img src="images/ai-failure-analysis-email.png" alt="AI-generated failure analysis email" width="600">
