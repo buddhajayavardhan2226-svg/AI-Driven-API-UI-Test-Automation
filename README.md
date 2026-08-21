@@ -85,7 +85,7 @@ API-UI-DATA-testing/
 | `test_regestrationPage.py` | UI user registration flow | 2 |
 | `test_login.py` | Valid & invalid login scenarios | 3, 4 |
 | `test_transfer_page.py` | Fund transfer between accounts | 5 |
-| `test_END_TO_END.py` | Full journey: register → login → transfer → verify transaction → logout | — |
+| `test_END_TO_END.py` | Full journey: register → login → transfer → verify transaction → logout | 6 |
 
 ---
 
@@ -198,7 +198,7 @@ The n8n workflow:
 
 | Test | Root Cause Identified by AI | Fix Suggested |
 |---|---|---|
-| `test_login_validDetails` | Login rejected — credentials didn't match any record, likely due to the ParaBank demo database resetting in CI while the test relied on a hardcoded user | Register the user dynamically (via API or UI) immediately before login, instead of depending on a static account |
+| `test_login_validDetails` | Login rejected where credentials didn't match any record, likely due to the ParaBank demo database resetting in CI while the test relied on a hardcoded user | Register the user dynamically (via API or UI) immediately before login, instead of depending on a static account |
 | `test_transation_page` | Selector `#fromAccountId optionuuuuvvvuuu` does not exist in the DOM . a typo caused Playwright to time out waiting for it | Correct the selector to `#fromAccountId option`, or use a resilient locator with `.first.to_be_attached()` |
 
 ---
