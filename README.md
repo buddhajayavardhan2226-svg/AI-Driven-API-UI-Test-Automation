@@ -4,7 +4,7 @@
 
 **End-to-End UI + API Testing | Python · Playwright · Pytest**
 
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Playwright](https://img.shields.io/badge/Playwright-Sync%20API-2EAD33?logo=playwright&logoColor=white)](https://playwright.dev/python/)
 [![Pytest](https://img.shields.io/badge/Pytest-Framework-0A9EDC?logo=pytest&logoColor=white)](https://docs.pytest.org/)
 [![GitHub Actions](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/features/actions)
