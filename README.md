@@ -205,8 +205,7 @@ The n8n workflow:
 
 ## 🎥 Full Project Walkthrough
 
-
-https://github.com/user-attachments/assets/efc12de7-6c4a-4a1b-91d1-5160be4a0e1c
+https://github.com/user-attachments/assets/626d1064-1b2e-42c6-a478-8ef471c879e4
 
 ## 👤 Author
 
