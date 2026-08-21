@@ -133,11 +133,11 @@ pytest tests/test_END_TO_END.py -v
 
 Every run generates the following, organized under `reports/`:
 
-- **Allure Report** — interactive test report with steps, timings, and attachments
-- **HTML Report** (`reports/myreport.html`) — self-contained, shareable summary
-- **Screenshots** — auto-captured on failure (`reports/screenshots/`)
-- **Videos** — auto-recorded on failure (`reports/videos/`)
-- **Playwright Traces** — full trace timeline for debugging failures (`reports/traces/`)
+- **Allure Report** for interactive test report with steps, timings, and attachments
+- **HTML Report** (`reports/myreport.html`) for self-contained, shareable summary
+- **Screenshots** for auto-captured on failure (`reports/screenshots/`)
+- **Videos** for auto-recorded on failure (`reports/videos/`)
+- **Playwright Traces** for full trace timeline for debugging failures (`reports/traces/`)
 
 <p align="center">
   <img src="images/reports-folder-overview.png" alt="Reports folder overview" width="320">
@@ -167,7 +167,7 @@ Configured in `.github/workflows/main.yml`, the pipeline is triggered on every p
 3. Run the full pytest suite (headed, with retries) inside the CI runner
 4. Generate the Allure HTML report
 5. Upload all reports, screenshots, videos, and traces as workflow artifacts
-6. Trigger the AI failure-analysis webhook — always, regardless of pass/fail
+6. Trigger the AI failure-analysis webhook  always, regardless of pass/fail
 
 <p align="center">
   <img src="images/github-actions-run.png" alt="Successful GitHub Actions run" width="700">
