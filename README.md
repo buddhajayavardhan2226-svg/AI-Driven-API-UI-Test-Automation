@@ -203,9 +203,33 @@ The n8n workflow:
 
 ---
 
+## 🎥 Full Project Walkthrough
+
+
+https://github.com/user-attachments/assets/efc12de7-6c4a-4a1b-91d1-5160be4a0e1c
+
 ## 👤 Author
 
 **Jayavardhan**
 QA / SDET | Automation Testing with Python & Playwright
 
 [LinkedIn](https://www.linkedin.com/in/buddha-jayavardhan)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
